@@ -10,10 +10,12 @@ namespace OTelUseCase.Pages
         public PrivacyModel(ILogger<PrivacyModel> logger)
         {
             _logger = logger;
+            _logger.LogInformation("Log: PrivacyModel");
         }
 
         public void OnGet()
         {
+            _logger.LogInformation("Log: Privacy OnGet");
         }
     }
 }

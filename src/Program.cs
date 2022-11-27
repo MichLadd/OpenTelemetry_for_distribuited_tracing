@@ -1,14 +1,11 @@
 
+using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorPages();
-
-var app = builder.Build();
-
-// Logging provider
+builder.Logging.ClearProviders();
 using var loggerFactory = LoggerFactory.Create(builder =>
 {
     builder.AddOpenTelemetry(options =>
@@ -16,6 +13,23 @@ using var loggerFactory = LoggerFactory.Create(builder =>
         options.AddConsoleExporter();
     });
 });
+
+var logger = loggerFactory.CreateLogger<Program>();
+
+
+// Add services to the container.
+builder.Services.AddRazorPages();
+
+var app = builder.Build();
+
+// dynamic page for logger testing
+app.MapGet("/Testing", async context =>
+{
+    logger.LogInformation("Testing logging in Program.cs");
+    await context.Response.WriteAsync("Testing");
+});
+
+logger.LogInformation($"Welcome to {Assembly.GetEntryAssembly().GetName().Name}.");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -34,4 +48,5 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
+logger.LogInformation("Starting the app");
 app.Run();

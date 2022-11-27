@@ -10,11 +10,12 @@ namespace OTelUseCase.Pages
         public IndexModel(ILogger<IndexModel> logger)
         {
             _logger = logger;
+            _logger.LogInformation("Log: IndexModel");
         }
 
         public void OnGet()
         {
-
+            _logger.LogInformation("Log: Index OnGet");
         }
     }
 }
