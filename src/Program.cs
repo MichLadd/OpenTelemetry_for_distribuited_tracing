@@ -1,6 +1,10 @@
 
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OTelUseCase;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,9 +20,47 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 
 var logger = loggerFactory.CreateLogger<Program>();
 
+// shared Resource to use for both OTel metrics AND tracing
+var resource = ResourceBuilder.CreateDefault().AddService("OTelUseCase");
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+// Add tracing auto instrumentation
+builder.Services.AddOpenTelemetryTracing(b =>
+{
+    // uses the default Jaeger settings
+    b.AddJaegerExporter();
+
+    // receive traces from our own custom sources
+    b.AddSource(TelemetryConstants.MyAppTraceSource);
+
+    // decorate our service name so we can find it when we look inside Jaeger
+    b.SetResourceBuilder(ResourceBuilder.CreateDefault()
+        .AddService("OTelUseCase"));
+
+    // receive traces from built-in sources
+    b.AddHttpClientInstrumentation();
+    b.AddAspNetCoreInstrumentation();
+});
+
+
+// Add metrics auto instrumentation
+builder.Services.AddOpenTelemetryMetrics(b =>
+{
+    // add prometheus exporter
+    b.AddPrometheusExporter();
+
+    // receive metrics from our own custom sources
+    b.AddMeter(TelemetryConstants.MyAppTraceSource);
+
+    // decorate our service name so we can find it when we look inside Prometheus
+    b.SetResourceBuilder(resource);
+
+    // receive metrics from built-in sources
+    b.AddHttpClientInstrumentation();
+    b.AddAspNetCoreInstrumentation();
+});
 
 var app = builder.Build();
 
@@ -26,7 +68,7 @@ var app = builder.Build();
 app.MapGet("/Testing", async context =>
 {
     logger.LogInformation("Testing logging in Program.cs");
-    await context.Response.WriteAsync("Testing");
+    await context.Response.WriteAsync("Testing, check log info.");
 });
 
 logger.LogInformation($"Welcome to {Assembly.GetEntryAssembly().GetName().Name}.");
