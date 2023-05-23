@@ -41,6 +41,19 @@ builder.Services.AddOpenTelemetryTracing(b =>
          o.AgentHost = builder.Configuration.GetValue<string>("Jaeger:Host");
          o.AgentPort = builder.Configuration.GetValue<int>("Jaeger:Port");
      });
+
+    // adding Otlp exporter
+    var oTelExporter__Host = Environment.GetEnvironmentVariable("OTelExporter__Host");
+    b.AddOtlpExporter(opt =>
+    {
+        opt.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+        if (!string.IsNullOrEmpty(oTelExporter__Host))
+        {
+            opt.Endpoint = new Uri(oTelExporter__Host);
+        }
+        System.Console.WriteLine($"OTLP Exporter is using {opt.Protocol} protocol and endpoint {opt.Endpoint}");
+    });
+
     // receive traces from our own custom sources
     b.AddSource(TelemetryConstants.MyAppTraceSource);
 
