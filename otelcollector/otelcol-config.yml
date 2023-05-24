@@ -10,7 +10,7 @@ processors:
 
 exporters:
   otlp:
-    endpoint: 
+    endpoint: otelcol-middle:4317
     tls:
       insecure: true
   jaeger:
@@ -29,4 +29,4 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [jaeger, logging]
+      exporters: [jaeger, otlp, logging]

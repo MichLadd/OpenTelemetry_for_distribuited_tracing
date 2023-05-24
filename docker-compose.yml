@@ -43,3 +43,21 @@ services:
       - "4318:4318"     # OTLP receiver over HTTP  (default value)
     depends_on:
       - jaeger
+  
+  otelcol-middle:
+    image: otel/opentelemetry-collector-contrib:0.77.0
+    container_name: otelcol-middle
+    deploy:
+      resources:
+        limits:
+          memory: 125M
+    restart: unless-stopped
+    command: [ "--config=/etc/otelcol-config.yml" ]
+    volumes:
+      - ./otelcollector/otelcol-config_middle.yml:/etc/otelcol-config.yml
+    ports:
+      - "13134:13133"   # health_check extension
+      - "4317"          # OTLP receiver over gRPC  (default value)
+      - "4328:4328"     # OTLP receiver over HTTP  (default value)
+    depends_on:
+      - jaeger
